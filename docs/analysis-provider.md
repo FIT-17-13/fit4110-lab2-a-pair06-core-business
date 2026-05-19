@@ -1,11 +1,11 @@
 # Phân tích yêu cầu — vai Provider
 
-- Cặp đàm phán:
-- Product: A / B
-- Provider service:
-- Consumer service:
-- Người viết:
-- Ngày:
+- Cặp đàm phán: Pair-03 Core Business ↔ Access Gate
+- Product: Smart Campus Operations Platform
+- Provider service: Access Gate Service
+- Consumer service: Core Business Service
+- Người viết: Hoài Nam
+- Ngày: 2026-05-19
 
 ---
 
@@ -13,8 +13,8 @@
 
 | Resource | Mô tả | Thuộc tính bắt buộc | Thuộc tính tùy chọn |
 |---|---|---|---|
-| `<Resource 1>` |  |  |  |
-| `<Resource 2>` |  |  |  |
+| AccessLog | Bản ghi quẹt thẻ tại cổng ra/vào | logId, cardId, gateId, timestamp, direction, result | userId, zoneId, reason |
+| GateStatus | Trạng thái hiện tại của một cổng | gateId, status, lastUpdated | zoneId |
 
 ---
 
@@ -22,41 +22,38 @@
 
 | Method | Path | Mục đích | Consumer gọi khi nào? |
 |---|---|---|---|
-| POST | `/...` |  |  |
-| GET | `/.../{id}` |  |  |
+| GET | `/access-logs` | Cung cấp danh sách log quẹt thẻ | Khi Core cần kiểm tra rule theo khoảng thời gian |
+| GET | `/access-logs/{logId}` | Cung cấp chi tiết một log | Khi Core cần tra cứu một log cụ thể |
+| GET | `/gates/{gateId}/status` | Cung cấp trạng thái hiện tại của cổng | Khi Core cần kiểm tra cổng đang mở, đóng, khóa hay lỗi |
 
 ---
 
 ## 3. Error case
 
-Tối thiểu 5 case.
-
 | Status | Tình huống | Response body dự kiến |
 |---:|---|---|
-| 400 | Payload sai định dạng | `Problem` |
-| 401 | Thiếu Bearer token | `Problem` |
-| 403 | Token hợp lệ nhưng không có quyền | `Problem` |
-| 404 | Resource không tồn tại | `Problem` |
-| 409 | Xung đột nghiệp vụ | `Problem` |
-| 422 | Dữ liệu đúng JSON nhưng vi phạm nghiệp vụ | `Problem` |
+| 400 | Query parameter sai định dạng | `ErrorResponse` |
+| 401 | Thiếu Bearer token | `ErrorResponse` |
+| 403 | Token hợp lệ nhưng không có quyền | `ErrorResponse` |
+| 404 | Không tìm thấy log hoặc gate | `ErrorResponse` |
+| 409 | Dữ liệu log bị trùng hoặc xung đột trạng thái | `ErrorResponse` |
+| 422 | Dữ liệu đúng JSON nhưng vi phạm nghiệp vụ | `ErrorResponse` |
 
 ---
 
 ## 4. Giả định bổ sung
 
-Ghi rõ những điểm user story chưa nói nhưng Provider cần giả định.
-
-- Giả định 1:
-- Giả định 2:
-- Giả định 3:
+- Access Gate có khả năng lưu và truy xuất lịch sử access log.
+- Mỗi access log có `logId` duy nhất.
+- Gate status gồm các giá trị: `open`, `closed`, `locked`, `error`.
 
 ---
 
 ## 5. Câu hỏi cho Consumer
 
-1. 
-2. 
-3. 
+1. Core Business cần lấy log trong khoảng thời gian tối đa bao lâu?
+2. Core có cần phân trang khi danh sách access logs lớn không?
+3. Core có cần thêm field `zoneId` để kiểm tra khu vực cấm không?
 
 ---
 
@@ -65,4 +62,6 @@ Ghi rõ những điểm user story chưa nói nhưng Provider cần giả địn
 | Rủi ro | Tác động | Đề xuất xử lý |
 |---|---|---|
 | Tên field không thống nhất | Consumer parse lỗi | Chốt naming trong `openapi.yaml` |
-| Payload lớn | Timeout/mock lỗi | Thống nhất content-type và size limit |
+| Payload log quá lớn | Timeout/mock lỗi | Bổ sung pagination hoặc filter thời gian |
+| Thiếu timezone trong timestamp | Core xử lý sai rule ngoài giờ | Dùng ISO 8601 UTC |
+| Consumer cần field chưa có | Phải sửa contract nhiều lần | Đàm phán field bắt buộc/tùy chọn trước khi viết OpenAPI |

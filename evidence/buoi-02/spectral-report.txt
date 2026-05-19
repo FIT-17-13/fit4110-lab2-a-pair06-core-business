@@ -1,0 +1,5 @@
+
+> fit4110-lab02-openapi-contract@1.0.0 lint
+> spectral lint openapi.yaml --ruleset campus-spectral.yaml
+
+No results with a severity of 'error' found!
