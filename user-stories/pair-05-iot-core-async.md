@@ -1,36 +1,30 @@
-# User Story — IoT Ingestion → Core Business
+# Event Contract sơ bộ — Pair 05 (IoT Ingestion → Core Business)
 
-## 1. Cơ chế
+## 1. Thông tin dependency
+- **Producer:** IoT Ingestion (Nhóm A1)
+- **Consumer:** Core Business (Nhóm A6)
+- **Cơ chế:** Queue async (MQTT / RabbitMQ)
 
-**Queue async**
+## 2. Mục đích nghiệp vụ
+IoT Ingestion tiếp nhận tín hiệu liên tục từ các cảm biến phần cứng (nhiệt độ, phòng máy, cảm biến khói) và đẩy sự kiện lên Queue để Core Business tiêu thụ và chạy Rule Engine nhằm phát hiện cháy nổ hoặc quá nhiệt.
 
-## 2. Bối cảnh
+## 3. Kênh & Tên Sự kiện
+- **Event Name:** `sensor.reading.created`
+- **Topic/Queue dự kiến:** `smartcampus.exchange.telemetry` / `queue.core.sensor_readings`
 
-IoT Ingestion publish sensor event mới để Core Business đánh giá policy hoặc phát hiện bất thường.
-
-## 3. Nhu cầu của Consumer
-
-Ở Lab 02 chỉ thống nhất event payload tối thiểu gồm deviceId, sensorType, value, unit, timestamp.
-
-## 4. Endpoint / Event trọng tâm
-
-- `Event sensor.reading.created`
-- `Event sensor.threshold.exceeded`
-
-## 5. Error case / Issue cần nghĩ trước
-
-- Dữ liệu sai định dạng.
-- Thiếu thông tin định danh hoặc correlation id.
-- Consumer và Provider hiểu khác nhau về trạng thái nghiệp vụ.
-- Trùng event/request hoặc retry gây xử lý lặp.
-- Timeout hoặc lỗi downstream.
-
-## 6. Câu hỏi gợi ý cho phiên đàm phán
-
-1. Giá trị sensor dùng đơn vị nào?
-2. Event có cần locationId không?
-3. Core xử lý event trễ quá bao lâu thì bỏ qua?
-
-## 7. Ghi chú phạm vi Lab 02
-
-Cặp này là Queue async. Trong Lab 02, hai bên chưa cần viết AsyncAPI đầy đủ. Tuy nhiên, cần ghi rõ thỏa thuận sơ bộ trong `negotiation-log.md` hoặc dùng `docs/event-contract-template.md` nếu giảng viên yêu cầu.
+## 4. Payload tối thiểu (JSON)
+```json
+{
+  "eventId": "a1122334-b556-c778-d990-112233445566",
+  "eventType": "sensor.reading.created",
+  "occurredAt": "2026-05-19T13:46:00Z",
+  "correlationId": "iot-trace-abc123",
+  "source": "iot-ingestion",
+  "data": {
+    "deviceId": "esp32-room302",
+    "sensorType": "temperature",
+    "value": 41.5,
+    "unit": "CELSIUS",
+    "locationId": "ZONE-SERVER-ROOM"
+  }
+}
